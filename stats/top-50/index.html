@@ -1,0 +1,529 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Top 50 · VolleyStats</title><meta name="description" content="Opponent-adjusted stats, team ratings, power rankings, RPI and matchup projections for NCAA D1 women's volleyball."><link rel="alternate" type="application/rss+xml" title="VolleyStats" href="../../feed.xml"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"><link rel="stylesheet" href="../../assets/style.css?v=b0350bf008"><link rel="stylesheet" href="../../assets/site.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script></head><body><nav class="site-nav"><div class="site-nav-in"><a class="site-brand" href="../../">VolleyStats</a><div class="site-links"><a href="../../stats/" class="on">Stats</a><a href="../../blog/">Blog</a><a href="../../about/">About</a></div></div></nav><header class="top"><div class="top-in">
+  <div class="brand">
+    <h1>NCAA Division 1 Women's Volleyball <span id="h-season" hidden>2026</span></h1>
+    <label class="season" aria-label="Season"><select id="season-sel"></select></label>
+    <span class="fav-chip" id="fav-chip" hidden></span>
+    <div class="status" id="upd"></div>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="nat">National</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="cf">Conference stats</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="am" id="tm-tab">Team</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="cmp">Compare</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="tr">Trends</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="grp">Top 50</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="rpi">RPI</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="pwr">Power</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="ncaa" id="ncaa-tab" hidden>Bracketology</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="sc" id="sc-tab" hidden>Scores</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="gl">Glossary</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="dq">Data quality</button>
+  </nav>
+</div></header>
+<main class="wrap">
+
+<!-- ================= NATIONAL ================= -->
+<section class="panel" id="p-nat">
+  <div class="kpis" id="nat-kpis"></div>
+  <div class="grid g2">
+    <div class="card"><h3>Sideout % across <span id="nat-scope">D1</span> <small>teams with 3+ matches<span id="nat-mark"> · A&amp;M marked</span> · follows the conference filter below</small></h3><div class="chart"><canvas id="c-so-hist"></canvas></div></div>
+    <div class="card"><h3>Sideout vs point-scoring <small>one dot per team · hover for name · logos appear when a conference or group is selected</small></h3><div class="chart tall"><canvas id="c-scatter"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Team ratings <small>click a team for its matches · ranks among teams with 3+ matches</small></h3>
+    <div class="controls">
+      <label>View <select id="t-view"><option value="rt">Ratings</option><option value="sc">Scorecard</option></select></label>
+      <label>Conference <select id="t-conf" class="conf-sel"></select></label>
+      <label>Search <input type="text" id="t-search" placeholder="team name"></label>
+      <label>Min matches <input type="number" id="t-min" value="3" min="1" max="8"></label>
+      <span id="t-count"></span>
+    </div>
+    <div class="tbl-wrap"><table id="t-teams"></table></div>
+    <div id="t-drill"></div>
+  </div>
+  <div class="card">
+    <h3>Player leaderboard <small>national · 20+ touches recorded</small></h3>
+    <div class="controls">
+      <label>Metric <select id="p-metric">
+        <option value="kill_pct" selected>Kill %</option><option value="att_eff">Attack efficiency</option><option value="kills_per_set">Kills / set</option>
+        <option value="aces_per_set">Aces / set</option><option value="ace_pct">Ace %</option><option value="ko_pct">Knockout % (KO%)</option><option value="serve_err_pct">Serve error %</option>
+        <option value="pass_rating">Pass rating (0–3)</option><option value="good_pass_pct">Good pass %</option>
+        <option value="blocks_per_set">Blocks / set</option><option value="digs_per_set">Digs / set</option></select></label>
+      <label>Min attempts <input type="number" id="p-min" value="60" min="0" step="10"></label>
+      <label>Position <select id="p-pos"><option value="">All positions</option><option value="Pin">Pin</option><option value="OPP/MB">OPP/MB</option><option value="MB">MB</option><option value="S">S</option><option value="L/DS">L/DS</option></select></label>
+      <label>Conference <select id="p-conf" class="conf-sel"></select></label>
+      <label>Team <input type="text" id="p-team" placeholder="filter by team"></label>
+      <label>Show <select id="p-n"><option>25</option><option selected>50</option><option>100</option><option>250</option></select></label>
+    </div>
+    <div class="hb" id="hb-players"></div><div class="tbl-wrap"><table id="t-players"></table></div>
+    <p class="note"><a href="#" class="gl-link" data-gl="players">Definitions in the Glossary →</a></p>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Attack combo leaderboard <small>national · one row per player × attack code · D1 avg in grey</small></h3>
+    <div class="controls">
+      <label>Combo <select id="cb-combo"></select></label>
+      <label>Phase <select id="cb-phase"><option value="all">All swings</option><option value="fb">FBSO only</option><option value="is">FBSO · in system (R# / R+)</option><option value="md">FBSO · medium (R!)</option><option value="os">FBSO · out of system (R-)</option><option value="tr">Transition only</option></select></label>
+      <label>Min swings <input type="number" id="cb-min" value="60" min="1" step="5"></label>
+      <label>Conference <select id="cb-conf" class="conf-sel"></select></label>
+      <label>Search <input type="text" id="cb-q" placeholder="player or team"></label>
+      <label>Show <select id="cb-n"><option>25</option><option selected>50</option><option>100</option><option>250</option></select></label>
+      <span id="cb-count"></span>
+    </div>
+    <div class="hb" id="hb-cb"></div><div class="tbl-wrap"><table id="t-cb"></table></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Setter leaderboard <small>national · what attackers do off each setter's sets</small></h3>
+    <div class="controls">
+      <label>Phase <select id="st-phase"><option value="all">All swings</option><option value="fb">FBSO only</option><option value="is">FBSO · in system (R# / R+)</option><option value="md">FBSO · medium (R!)</option><option value="os">FBSO · out of system (R-)</option><option value="tr">Transition only</option></select></label>
+      <label>Min set attempts <input type="number" id="st-min" value="200" min="1" step="50"></label>
+      <label>Conference <select id="st-conf" class="conf-sel"></select></label>
+      <label>Search <input type="text" id="st-q" placeholder="setter or team"></label>
+      <label>Show <select id="st-n"><option>25</option><option selected>50</option><option>100</option><option>250</option></select></label>
+      <span id="st-count"></span>
+    </div>
+    <div class="hb" id="hb-st"></div><div class="tbl-wrap"><table id="t-st"></table></div>
+  </div>
+  <div class="card" style="margin-top:18px">
+    <h3>Libero / DS leaderboard <small>national · passing, attacking off their sets, serving</small></h3>
+    <div class="controls">
+      <label>Position <select id="lb-pos"><option value="L/DS" selected>Libero / DS</option><option value="">All passers</option><option value="Pin">Pin</option></select></label>
+      <label>Rank by <select id="lb-metric"><option value="xfbso">xFBSO</option><option value="pass_rating">Pass rating</option><option value="good_pass_pct">Good pass %</option><option value="ko_pct">Knockout %</option><option value="set_eff">Eff off their set</option></select></label>
+      <label>Min receptions <input type="number" id="lb-min" value="100" min="1" step="25"></label>
+      <label>Conference <select id="lb-conf" class="conf-sel"></select></label>
+      <label>Search <input type="text" id="lb-q" placeholder="player or team"></label>
+      <label>Show <select id="lb-n"><option>25</option><option selected>50</option><option>100</option><option>250</option></select></label>
+      <span id="lb-count"></span>
+    </div>
+    <div class="hb" id="hb-lb"></div><div class="tbl-wrap"><table id="t-lb"></table></div>
+  </div>
+</section>
+
+<!-- ================= TEAM ================= -->
+<section class="panel" id="p-am" hidden>
+  <div class="card" style="margin-bottom:18px"><div class="controls" style="margin-bottom:0">
+    <span id="tm-logo"></span>
+    <label>Team <select id="tm-sel" class="team-sel"></select></label>
+    <button type="button" id="tm-fav" class="fav-btn" hidden>☆ Make favorite</button>
+    <label>Charts show <select id="tm-win"><option value="0">All matches</option><option value="10">Last 10</option><option value="15">Last 15</option><option value="20">Last 20</option></select></label>
+    <span class="note" style="margin:0">Pick any D1 team</span>
+  </div></div>
+  <div class="kpis" id="tm-kpis"></div>
+  <div class="card" style="margin-bottom:18px" id="tm-rt-card"><h3>Team ratings <small id="tm-rt-sub">40–99 · 70 = D1 average</small></h3>
+    <div class="rt-wrap"><div class="rt-tiles" id="tm-rt-tiles"></div><div class="rt-radar-wrap"><label class="rt-cmp-pick">vs <select id="tm-rt-cmp"><option value="conf">Conference average</option><option value="Top 15">Top 15 average</option><option value="Top 50">Top 50 average</option></select></label><div class="chart rt-radar"><canvas id="c-tm-radar"></canvas></div></div></div>
+    <div class="rt-detail" id="tm-rt-detail"></div>
+    <p class="note" id="tm-rt-note"></p></div>
+  <div class="card" style="margin-bottom:18px"><h3>Profile vs <span id="tm-prof-vs-lab">D1</span> <small id="tm-prof-sub">percentile among D1 teams · dashed line = D1 median · longer bar is better</small></h3><div class="seg" id="tm-prof-vs"><button type="button" data-v="d1" class="on">vs D1</button><button type="button" data-v="conf">vs conference</button></div><div class="hb" id="tm-prof"></div></div>
+  <div class="grid g2">
+    <div class="card"><h3>Sideout by match <small>solid = SO% · dashed = xFBSO</small></h3><div class="chart"><canvas id="c-tm-so"></canvas></div>
+      <div class="legend"><span id="tm-leg-so" style="--c:var(--maroon-ink)"><span class="tm-name">Team</span> SO%</span><span style="--c:var(--s1)">Opponent SO%</span><span class="dashed" style="--c:var(--s4)"><span class="tm-name">Team</span> xFBSO</span><span class="dashed" style="--c:var(--s3)">Opponent xFBSO</span></div></div>
+    <div class="card"><h3>xFBSO (S) by match <small>expected sideout the serve concedes · lower is a tougher serve</small></h3><div class="chart"><canvas id="c-tm-xfs"></canvas></div>
+      <div class="legend"><span id="tm-leg-xfs" style="--c:var(--maroon-ink)"><span class="tm-name">Team</span> serving</span><span style="--c:var(--s1)">Opponent serving</span></div></div>
+    <div class="card"><h3>Kill % by match <small><span class="tm-name">Team</span> vs opponent</small></h3><div class="chart"><canvas id="c-tm-eff"></canvas></div>
+      <div class="legend"><span id="tm-leg-eff" style="--c:var(--maroon-ink)"><span class="tm-name">Team</span></span><span style="--c:var(--s1)">Opponent</span></div></div>
+    <div class="card"><h3>Good pass % by match <small>share of receptions graded R# or R+</small></h3><div class="chart"><canvas id="c-tm-gp"></canvas></div>
+      <div class="legend"><span id="tm-leg-gp" style="--c:var(--maroon-ink)"><span class="tm-name">Team</span></span><span style="--c:var(--s1)">Opponent</span><span class="dashed" style="--c:var(--ink-3)" id="tm-gp-avg">D1 average</span></div></div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><h3>By rotation <small>setter position</small></h3><div class="chart"><canvas id="c-tm-rot"></canvas></div>
+      <div class="legend"><span id="tm-leg-rot" class="sq" style="--c:var(--maroon-ink)">Sideout %</span><span class="sq" style="--c:var(--s1)">Point-scoring %</span></div></div>
+    <div class="card"><h3>Attack by start zone <small>efficiency · label = attempts</small></h3><div class="chart"><canvas id="c-tm-zone"></canvas></div></div>
+    <div class="card"><h3>Attack by phase</h3><div id="tm-phase" style="margin-top:12px"></div></div>
+  </div>
+  <div class="card" style="margin-bottom:18px" id="tm-sd-card" hidden><h3>Set distribution by rotation <small>sets after a good or perfect pass (R# / R+) · by setter zone</small></h3>
+    <div class="controls"><label>Compare <select id="tm-sd-cmp"><option value="">None</option><option value="_P30">Power top 30 average</option></select></label><span class="rot-pick" id="tm-sd-rot"></span></div>
+    <div class="chart" style="height:420px"><canvas id="c-tm-sd"></canvas></div>
+    <div class="legend" id="tm-sd-leg"></div>
+    <p class="note">F front · C center · B back (behind the setter) · P pipe · S setter · O other (no target coded). Number beside each rotation = sets. Season to date.</p></div>
+  <div class="card" style="margin-bottom:18px" id="tm-fd-card" hidden><h3>Set distribution by rotation: freeballs <small>sets after a good or perfect freeball (F# / F+) · by setter zone</small></h3>
+    <div class="controls"><label>Compare <select id="tm-fd-cmp"><option value="">None</option><option value="_P30">Power top 30 average</option></select></label><span class="rot-pick" id="tm-fd-rot"></span></div>
+    <div class="chart" style="height:420px"><canvas id="c-tm-fd"></canvas></div>
+    <div class="legend" id="tm-fd-leg"></div>
+    <p class="note">F front · C center · B back (behind the setter) · P pipe · S setter · O other (no target coded). Number beside each rotation = sets. Season to date. Freeball samples are small, so check the set counts.</p></div>
+  <div class="card" style="margin-bottom:18px"><h3>Scorecard <small>per set · season, <span class="tm-name">Team</span> vs its opponents</small></h3><div class="tbl-wrap"><table id="t-tm-sc"></table></div>
+    <p class="note"><a href="#" class="gl-link" data-gl="scorecard">Definitions in the Glossary →</a></p></div>
+  <div class="card" style="margin-bottom:18px"><h3>Scorecard by match <small>team row, then opponent row</small></h3><div class="tbl-wrap"><table id="t-tm-sc-pm"></table></div></div>
+  <div class="card" style="margin-bottom:18px"><h3>Attackers by combo <small>efficiency per attack code · D1 = national average for the combo</small></h3>
+    <div class="controls"><label>Player <select id="tm-cb-player"><option value="">All</option></select></label><label>Min swings <input type="number" id="tm-cb-min" value="10" min="1" step="5"></label><label>Phase <select id="tm-cb-phase"><option value="all">All swings</option><option value="fb">FBSO only</option><option value="is">FBSO · in system (R# / R+)</option><option value="md">FBSO · medium (R!)</option><option value="os">FBSO · out of system (R-)</option><option value="tr">Transition only</option></select></label><span id="tm-cb-count"></span></div>
+    <div class="tbl-wrap"><table id="t-tm-combos"></table></div></div>
+  <div class="card" style="margin-bottom:18px"><h3>Setters <small>what attackers do off each setter's sets</small></h3>
+    <div class="tbl-wrap"><table id="t-tm-setters"></table></div>
+    <div class="controls" style="margin-top:12px"><label>Setter <select id="tm-st-setter"></select></label><label>Phase <select id="tm-st-phase"><option value="all">All swings</option><option value="fb">FBSO only</option><option value="is">FBSO · in system (R# / R+)</option><option value="md">FBSO · medium (R!)</option><option value="os">FBSO · out of system (R-)</option><option value="tr">Transition only</option></select></label><label>Min swings <input type="number" id="tm-st-min" value="5" min="1" step="5"></label><span id="tm-st-count"></span></div>
+    <div class="tbl-wrap"><table id="t-tm-st-combos"></table></div></div>
+  <div class="grid g2">
+    <div class="card"><h3>Attack mix <small><span class="tm-name">Team</span> · share of swings by combo</small></h3><div class="tbl-wrap"><table id="t-tm-mix"></table></div></div>
+    <div class="card"><h3>Opponent attack mix <small>what opponents run against <span class="tm-name">Team</span> and what it earns</small></h3><div class="tbl-wrap"><table id="t-tm-mix-opp"></table></div></div>
+  </div>
+  <div class="card" style="margin-bottom:18px"><h3>Matches</h3><div class="tbl-wrap"><table id="t-tm-matches"></table></div></div>
+  <div class="card" style="margin-bottom:18px" id="tm-rem-card"><h3>Remaining schedule <small>win probability from the power ratings · opponent's current RPI and power rank</small></h3><div class="controls"><span id="tm-rem-sum"></span></div><div class="tbl-wrap"><table id="t-tm-rem"></table></div></div>
+  <div class="grid g2">
+    <div class="card"><h3>Roster <small>season totals · rank column = national rank on attack eff (60+ att)</small></h3><div class="tbl-wrap"><table id="t-tm-roster"></table></div></div>
+    <div class="card"><h3>Attacker by match <small>kills / attempts · efficiency</small></h3><div class="tbl-wrap"><table id="t-tm-pm"></table></div></div>
+  </div>
+</section>
+
+<!-- ================= COMPARE ================= -->
+<section class="panel" id="p-cmp" hidden>
+  <div class="card" style="margin-bottom:18px">
+    <div class="controls" style="margin-bottom:0">
+      <label>Team A <select id="cmp-sa" class="season-pick"></select> <select id="cmp-a" class="team-sel"></select></label>
+      <span style="color:var(--ink-3)">vs</span>
+      <label>Team B <select id="cmp-sb" class="season-pick"></select> <select id="cmp-b" class="team-sel"></select></label>
+      <button id="cmp-swap" type="button" style="font:inherit;font-size:12.5px;padding:5px 10px;border:1px solid var(--line-2);border-radius:4px;background:var(--surface-2);color:var(--ink);cursor:pointer">Swap</button>
+      <label>Site <select id="cmp-site"><option value="0">Neutral</option><option value="1">Team A home</option><option value="-1">Team B home</option></select></label>
+      <span id="cmp-h2h"></span>
+      <span id="cmp-next" class="note" style="margin:0" hidden></span>
+    </div>
+  </div>
+  <div class="cmp-head" id="cmp-head"></div>
+  <div class="card" style="margin-bottom:18px"><h3>Projected result <small>win probability from opponent-adjusted sideout ratings</small></h3><div id="cmp-proj" style="margin-top:10px"></div></div>
+  <div class="card" style="margin-bottom:18px"><h3>Team ratings <small>40–99 · 70 = D1 average</small></h3>
+    <div class="rt-wrap"><div id="cmp-rt-tiles" class="rt-cmp"></div><div class="chart rt-radar"><canvas id="c-cmp-radar"></canvas></div></div></div>
+  <div class="grid g2">
+    <div class="card"><h3>Season numbers <small>national rank in grey · shaded cell has the edge</small></h3><div class="tbl-wrap"><table id="t-cmp-rt"></table></div></div>
+    <div class="card"><h3>Gap by metric <small>percentile within D1 (3+ matches), A minus B</small></h3><div class="chart tall"><canvas id="c-cmp"></canvas></div></div>
+  </div>
+  <div class="card"><h3>Scorecard <small>per set</small></h3><div class="tbl-wrap"><table id="t-cmp-sc"></table></div></div>
+</section>
+
+<!-- ================= GROUP (Top 50) ================= -->
+<section class="panel" id="p-grp" hidden>
+  <div class="card" style="margin-bottom:18px"><div class="controls" style="margin-bottom:0">
+    <label>Group <select id="grp-sel"></select></label>
+    <span id="grp-count"></span>
+    <span class="note" style="margin:0 0 0 auto">Everything on this tab uses only matches where both teams are in the group · lists live in data/groups.csv</span>
+  </div></div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Standings <small>within-group matches only · rank = <span id="grp-ranklabel"></span></small></h3>
+    <div class="controls"><label>View <select id="grp-view"><option value="rt">Ratings</option><option value="sc">Scorecard</option></select></label><label>Color <select id="grp-heat"><option value="">Off</option><option value="grp">vs this group</option><option value="d1">vs D1</option></select></label><label id="grp-heatkey-lbl" hidden><input type="checkbox" id="grp-heatkey"> Key stats only</label><span class="heat-leg" id="grp-heat-leg" hidden><span class="hl-bad"></span>worse · better<span class="hl-good"></span></span><label><input type="checkbox" id="grp-played" checked> Only teams with a group match</label></div>
+    <div class="tbl-wrap"><table id="t-grp-st"></table></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Results <small>every group matchup played</small></h3>
+    <div class="controls"><label>Team <input type="text" id="grp-q" placeholder="filter by team"></label><span id="grp-res-count"></span></div>
+    <div class="tbl-wrap"><table id="t-grp-res"></table></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Head-to-head <small>row team's result vs column team · hover for score</small></h3>
+    <div class="tbl-wrap" style="max-height:none"><table id="t-grp-h2h" class="h2h"></table></div>
+  </div>
+  <div class="card">
+    <h3>Compare within group</h3>
+    <div class="controls"><label>Team A <select id="grp-a"></select></label><span style="color:var(--ink-3)">vs</span><label>Team B <select id="grp-b"></select></label><span id="grp-h2h-note"></span></div>
+    <div class="grid g2" style="margin-bottom:0">
+      <div><div class="tbl-wrap"><table id="t-grp-cmp-rt"></table></div></div>
+      <div><div class="tbl-wrap"><table id="t-grp-cmp-sc"></table></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONFERENCE STATS ================= -->
+<section class="panel" id="p-cf" hidden>
+  <div class="card" style="margin-bottom:18px"><div class="controls" style="margin-bottom:0">
+    <label>Conference <select id="cf-sel"></select></label>
+    <span id="cf-count"></span>
+    <span class="note" style="margin:0 0 0 auto">Conference play only — matches where both teams are in the conference · mapping in data/team_conference_2026.csv</span>
+  </div></div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Standings <small>within-group matches only · rank = <span id="cf-ranklabel"></span></small></h3>
+    <div class="controls"><label>View <select id="cf-view"><option value="rt">Ratings</option><option value="sc">Scorecard</option></select></label><label>Color <select id="cf-heat"><option value="">Off</option><option value="grp">vs this group</option><option value="d1">vs D1</option></select></label><label id="cf-heatkey-lbl" hidden><input type="checkbox" id="cf-heatkey"> Key stats only</label><span class="heat-leg" id="cf-heat-leg" hidden><span class="hl-bad"></span>worse · better<span class="hl-good"></span></span><label><input type="checkbox" id="cf-played" checked> Only teams with a conference match</label></div>
+    <div class="tbl-wrap"><table id="t-cf-st"></table></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Results <small>every conference match played</small></h3>
+    <div class="controls"><label>Team <input type="text" id="cf-q" placeholder="filter by team"></label><span id="cf-res-count"></span></div>
+    <div class="tbl-wrap"><table id="t-cf-res"></table></div>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Head-to-head <small>row team's result vs column team · hover for score</small></h3>
+    <div class="tbl-wrap" style="max-height:none"><table id="t-cf-h2h" class="h2h"></table></div>
+  </div>
+  <div class="card">
+    <h3>Compare within conference</h3>
+    <div class="controls"><label>Team A <select id="cf-a"></select></label><span style="color:var(--ink-3)">vs</span><label>Team B <select id="cf-b"></select></label><span id="cf-h2h-note"></span></div>
+    <div class="grid g2" style="margin-bottom:0">
+      <div><div class="tbl-wrap"><table id="t-cf-cmp-rt"></table></div></div>
+      <div><div class="tbl-wrap"><table id="t-cf-cmp-sc"></table></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RPI ================= -->
+<section class="panel" id="p-rpi" hidden>
+  <div class="kpis" id="rpi-kpis"></div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>RPI <small id="rpi-sub"></small></h3>
+    <div class="controls">
+      <label>View <select id="rpi-view"><option value="adj">RPI with bonuses (NCAA)</option><option value="std">Standard RPI</option><option value="fut">RPI futures</option></select></label>
+      <label>Conference <select id="rpi-conf" class="conf-sel"></select></label>
+      <label>Search <input type="text" id="rpi-q" placeholder="team name"></label>
+      <span id="rpi-count"></span>
+    </div>
+    <div class="tbl-wrap"><table id="t-rpi"></table></div>
+    <p class="note" id="rpi-note"></p>
+  </div>
+  <div class="card" style="margin-bottom:18px" id="rpi-cf-card">
+    <h3>RPI by conference <small id="rpi-cf-sub"></small></h3>
+    <div class="cf-split">
+      <div><div class="note" style="margin:0 0 6px">Nonconference win % <span id="rpi-cf-chart-sub"></span></div><div class="hb" id="hb-rpi-cf"></div></div>
+      <div><div class="tbl-wrap"><table id="t-rpi-cf"></table></div></div>
+    </div>
+    <p class="note">Nonconference = D1 vs D1 results between teams from different conferences (non-D1 opponents aren't in the RPI). Ranks are the current RPI with bonuses. <b>Bad losses</b> = nonconference losses to teams ranked 151+. <b>NC opp #</b> = average current RPI rank of nonconference opponents. Click a conference to filter the RPI table above.</p>
+  </div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Team results <small>opponent's current RPI rank (with bonuses) · <span class="rpi-key q1">win vs top 25</span> <span class="rpi-key q2">win vs 26–50</span></small></h3>
+    <div class="controls"><label>Team <select id="rpi-team"></select></label><span id="rpi-res-sum"></span></div>
+    <div class="tbl-wrap"><table id="t-rpi-res"></table></div>
+  </div>
+  <div class="card">
+    <h3>Remaining schedule <small>win probability from the sideout model · opponent's current RPI rank</small></h3>
+    <div class="controls"><span id="rpi-team-sum"></span></div>
+    <div class="tbl-wrap"><table id="t-rpi-rem"></table></div>
+  </div>
+</section>
+
+<!-- ================= POWER RANKINGS ================= -->
+<section class="panel" id="p-pwr" hidden>
+  <div class="kpis" id="pwr-kpis"></div>
+  <div class="card">
+    <h3>Power rankings <small id="pwr-sub"></small></h3>
+    <div class="controls">
+      <label>Conference <select id="pwr-conf" class="conf-sel"></select></label>
+      <label>Search <input type="text" id="pwr-q" placeholder="team name"></label>
+      <label>Min matches <input type="number" id="pwr-min" value="3" min="1" max="10"></label>
+      <span id="pwr-count"></span>
+    </div>
+    <div class="tbl-wrap"><table id="t-pwr"></table></div>
+    <p class="note"><a href="#" class="gl-link" data-gl="power">Definitions in the Glossary →</a></p>
+  <div class="card" style="margin-top:18px" id="pwr-rt-card">
+    <h3>Team ratings <small id="pwr-rt-sub">40–99 · 70 = D1 average</small></h3>
+    <div class="tbl-wrap"><table id="t-pwr-rt"></table></div>
+    <p class="note"><a href="#" class="gl-link" data-gl="ratings">Definitions in the Glossary →</a></p>
+  </div>
+  </div>
+</section>
+
+<!-- ================= SCORES ================= -->
+<section class="panel" id="p-sc" hidden>
+  <div class="card">
+    <div class="sc-bar">
+      <div class="sc-date"><button type="button" id="sc-prev" aria-label="Previous day">‹</button><input type="date" id="sc-day" aria-label="Date"><button type="button" id="sc-next" aria-label="Next day">›</button><button type="button" id="sc-today">Today</button></div>
+      <div class="seg" id="sc-seg" style="margin:0"><button data-v="all" class="on">All</button><button data-v="live">Live</button><button data-v="final">Final</button><button data-v="pre">Upcoming</button></div>
+      <label>Conference <select id="sc-conf"></select></label>
+      <label>Sort <select id="sc-sort"><option value="time">Start time</option><option value="close">Closest matchups</option></select></label><label><input type="checkbox" id="sc-group"> Group by conference</label>
+      <span id="sc-status" class="sc-status"></span>
+    </div>
+    <div id="sc-grid"></div>
+    <p class="note" id="sc-note">Scores from the NCAA scoreboard, refreshed every 30 seconds while matches are live. TV and streaming from ESPN's listings where available; otherwise check the NCAA match page. Rank = RPI (with bonuses). Win probability from the power ratings, listed home team at home.</p>
+  </div>
+  <div class="card" style="margin-top:18px" id="pk-card">
+    <h3>How our picks did <span class="tab-badge">preview</span> <small id="pk-sub"></small></h3>
+    <div class="kpis" id="pk-kpis" style="margin-top:12px"></div>
+    <div class="chart" style="height:220px"><canvas id="c-pk"></canvas></div>
+    <div class="legend"><span class="sq" style="--c:var(--s1)">Share of matches the favorite won</span><span class="dashed" style="--c:var(--ink-3)">What the odds said to expect</span></div>
+    <div class="controls" style="margin-top:14px"><div class="seg" id="pk-seg" style="margin:0"><button data-v="7">Last 7 days</button><button data-v="14" class="on">Last 14 days</button><button data-v="all">Season</button></div><span id="pk-win" class="note" style="margin:0"></span></div>
+    <div class="grid g2" style="margin-top:6px">
+      <div><div class="note" style="margin:0 0 6px"><b>Calibration</b> · when we say 80%, the favorite should win about 80% of the time</div><div class="tbl-wrap"><table id="t-pk-cal"></table></div></div>
+      <div><div class="note" style="margin:0 0 6px"><b>Biggest upsets</b> · in the chosen window</div><div class="tbl-wrap"><table id="t-pk-up"></table></div></div>
+    </div>
+    <p class="note">A pick is the team with the higher pregame win probability. Each day's predictions come from a model rebuilt with only the matches charted before that day, so nothing about the result leaks in. Listed home team at home. Days are match days (dates with D1 results).</p>
+  </div>
+</section>
+
+<!-- ================= TRENDS ================= -->
+<section class="panel" id="p-tr" hidden>
+  <div class="kpis" id="tr-kpis"></div>
+  <div class="card" style="margin-bottom:18px">
+    <h3>Team trajectory <small>Power rank and RPI rank (with bonuses) at the end of each week · higher on the chart is better</small></h3>
+    <div class="controls"><label>Team <select id="tr-team"></select></label><label>vs <select id="tr-team2"><option value="">—</option></select></label><span id="tr-sum"></span></div>
+    <div class="chart" style="height:300px"><canvas id="c-tr"></canvas></div>
+    <div class="legend" id="tr-legend"></div>
+  </div>
+  <div class="card" style="margin-bottom:18px" id="tr-st-card">
+    <h3>Stat trends by week <small id="tr-st-sub"></small></h3>
+    <div class="controls"><label>Stat <select id="tr-st-m"></select></label><span class="note" style="margin:0">Team and "vs" are picked in Team trajectory above</span><span id="tr-st-sum"></span></div>
+    <div class="chart" style="height:260px"><canvas id="c-tr-st"></canvas></div>
+    <div class="legend" id="tr-st-legend"></div>
+    <div class="tbl-wrap" style="margin-top:14px"><table id="t-tr-st" class="hm"></table></div>
+    <p class="note">Each week = the matches played Monday through Sunday. Green cells beat the D1 average, red trail it; the stronger the shade, the further from average. Opponent and error stats are flipped so green is always good. Box scores from the scout files, so the latest matches appear once the files are in.</p>
+  </div>
+  <div class="card" style="margin-bottom:18px" id="tr-hc-card">
+    <h3>Hot and cold teams <small id="tr-hc-sub"></small></h3>
+    <div class="controls">
+      <label>Stat <select id="tr-hc-m"></select></label>
+      <label>Recent <select id="tr-hc-w"><option value="1">Last week</option><option value="2">Last 2 weeks</option><option value="3" selected>Last 3 weeks</option><option value="4">Last 4 weeks</option></select></label>
+      <label>Conference <select id="tr-hc-conf" class="conf-sel"></select></label>
+      <label>Min matches <input type="number" id="tr-hc-min" value="3" min="1" max="10"></label>
+    </div>
+    <div class="grid g2">
+      <div><div class="hc-h up">▲ Heating up</div><div class="db" id="tr-hot"></div></div>
+      <div><div class="hc-h dn">▼ Cooling off</div><div class="db" id="tr-cold"></div></div>
+    </div>
+    <div class="legend" style="margin-top:10px"><span class="db-k0">Before</span><span class="db-k1">Recent</span></div>
+    <p class="note">Recent window vs everything before it, for teams with the minimum matches on both sides. Small samples swing, so treat one-week moves as noise unless they match what you've seen on film.</p>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Biggest movers <small id="tr-mv-sub"></small></h3>
+      <div class="controls"><div class="seg" id="tr-mv-seg" style="margin:0"><button data-k="rrank" class="on">RPI</button><button data-k="prank">Power</button></div><label>Since <select id="tr-since"></select></label><label>Conference <select id="tr-conf" class="conf-sel"></select></label></div>
+      <div class="tbl-wrap"><table id="t-tr-mv"></table></div></div>
+    <div class="card"><h3>Top 25 by week <small id="tr-hm-sub">current top 25 · rank at the end of each week</small></h3>
+      <div class="controls"><div class="seg" id="tr-hm-seg" style="margin:0"><button data-k="rrank" class="on">RPI</button><button data-k="prank">Power</button></div></div>
+      <div class="tbl-wrap"><table id="t-tr-hm" class="hm"></table></div></div>
+  </div>
+  <p class="note">Each week is rebuilt from the results available through that Sunday, so earlier weeks never change when new data arrives. The last column is the latest update. Power ranks need 3+ matches. <a href="#" class="gl-link" data-gl="trends">Definitions in the Glossary →</a></p>
+</section>
+
+<!-- ================= BRACKETOLOGY ================= -->
+<section class="panel" id="p-ncaa" hidden>
+  <p class="note" style="margin:0 0 14px">Where the NCAA tournament field stands if the rest of the season plays out like our power ratings expect. Every remaining D1 match is simulated, the field is picked and seeded each time by the selection manual's rules, and the most likely bracket is shown below. Updated with each day's results.</p>
+  <div class="kpis" id="ncaa-kpis"></div>
+  <div class="card" style="margin-bottom:18px" id="ncaa-br-card">
+    <h3>Projected bracket <small id="ncaa-br-sub"></small></h3>
+    <div class="br-bubble" id="ncaa-bubble"></div>
+    <div class="br-grid" id="ncaa-br"></div>
+    <div class="br-ff" id="ncaa-ff"></div>
+    <p class="note" id="ncaa-br-note"></p>
+  </div>
+  <div class="card" style="margin-bottom:18px" id="ncaa-cf-card">
+    <h3>Bids by conference <small id="ncaa-cf-sub"></small></h3>
+    <div>
+      <div style="max-width:640px;margin-bottom:10px"><div class="note" style="margin:0 0 6px">Expected bids, multi-bid contenders <span class="rk">dashed line = 1 bid · one-bid leagues are in the table</span></div><div class="hb" id="hb-ncaa-cf"></div></div>
+      <div><div class="tbl-wrap"><table id="t-ncaa-cf"></table></div></div>
+    </div>
+    <p class="note"><b>Projected</b> = teams in the projected bracket above. <b>Expected</b> = sum of each team's chance to make the field, so it counts partial chances (a bubble team at 60% adds 0.6). <b>Seeds</b> = teams seeded 1–16 in the projection. <b>Bubble teams</b> = teams with a 20–80% chance to make the field, with that chance and whether they are in (in) or out (out) of the projected bracket; click the column to sort by how many a league has. <b>AQ favorite</b> = most likely automatic qualifier. Leagues that award the bid through a conference tournament (all but the ACC, Big Ten, Big 12 and WCC) have that tournament simulated: the top teams by conference record are seeded into a bracket and played out with the power ratings, so upsets and bid stealers are part of the odds. Once a tournament is over, its champion is locked in from the results (or name it in data/aq_conferences_2026.csv).</p>
+  </div>
+  <div class="card">
+    <h3>NCAA tournament outlook <small id="ncaa-sub"></small></h3>
+    <div class="seg" id="ncaa-seg"><button data-v="all" class="on">All</button><button data-v="host">Host race (top 16)</button><button data-v="bubble">Bubble</button><button data-v="aq">Conference AQs</button></div>
+    <div class="controls"><label>Conference <select id="ncaa-conf" class="conf-sel"></select></label><label>Search <input type="text" id="ncaa-q" placeholder="team name"></label><span id="ncaa-count"></span></div>
+    <div class="tbl-wrap"><table id="t-ncaa"></table></div>
+    <p class="note" id="ncaa-note"></p>
+  </div>
+</section>
+
+<!-- ================= GLOSSARY ================= -->
+<section class="panel" id="p-gl" hidden>
+  <div class="card" style="margin-bottom:18px"><div class="controls"><label>Search <input type="text" id="gl-q" placeholder="term or definition"></label><span id="gl-count"></span></div></div>
+  <div class="gl-grid">
+  <div class="card gl-sec" id="gl-core"><h3>Core</h3><dl>
+    <dt>SO %</dt><dd>Sideout: share of points won when receiving serve.</dd>
+    <dt>PS %</dt><dd>Point scoring: share of points won when serving.</dd>
+    <dt>Att eff</dt><dd>Attack efficiency: (kills − errors − blocked) ÷ attempts.</dd>
+    <dt>K %</dt><dd>Kills ÷ attempts.</dd>
+    <dt>Pass rating</dt><dd>Average reception grade on a 0–3 scale.</dd>
+    <dt>Good pass %</dt><dd>Share of receptions graded R# or R+.</dd>
+    <dt>UFE</dt><dd>Unforced errors per set: serve + attack + reception + set errors.</dd>
+    <dt>Set W %</dt><dd>Share of sets won.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-scorecard"><h3>Scorecard</h3><dl>
+    <dt>FBSO</dt><dd>First-ball sideout: reception points won before the receiving team's first transition touch. Opponent serve errors count.</dd>
+    <dt>ESO</dt><dd>Earned sideout: sideout % with opponent serve errors removed.</dd>
+    <dt>xFBSO</dt><dd>Expected FBSO: the D1 first-ball sideout rate for each pass grade, weighted by the team's pass mix. Measures pass quality in sideout terms.</dd>
+    <dt>xFBSO (S)</dt><dd>The same, for the opponent's passes off this team's serve. Lower = tougher serve.</dd>
+    <dt>GP Eff</dt><dd>First-ball attack efficiency off a good pass (R# / R+).</dd>
+    <dt>MP Eff</dt><dd>First-ball attack efficiency off a medium pass (R!).</dd>
+    <dt>BP Eff</dt><dd>First-ball attack efficiency off a bad pass (R−).</dd>
+    <dt>Tr InSys / Tr OoS</dt><dd>Transition attack efficiency when the possession began on a D# (in system) or D− (out of system) dig.</dd>
+    <dt>Tr F</dt><dd>Attack efficiency after receiving a free ball.</dd>
+    <dt>KO %</dt><dd>Knockout %: share of serves whose reception was R!, R−, R= (ace) or R/ (overpass).</dd>
+    <dt>SE %</dt><dd>Serve error %.</dd>
+    <dt>INSABE / OOSABE</dt><dd>Block touch value: (B# + B+ + B! − B− − B=) ÷ (block touches − B/), on attacks whose possession began in system (R#, R+, D#) or out of system (R−, D−). Blank under 5 touches.</dd>
+    <dt>Stuffs</dt><dd>Share of opponent attacks blocked for a point.</dd>
+    <dt>Create</dt><dd>Kill % on attacks off the team's own dig.</dd>
+    <dt>xD K %</dt><dd>Expected kill % off digs: the D1 kill rate for each dig grade, weighted by the team's dig mix. Measures dig quality.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-attack"><h3>Attacking splits</h3><dl>
+    <dt>FBSO swing</dt><dd>An attack in the reception phase (first ball after serve receive).</dd>
+    <dt>InSys</dt><dd>FBSO swing off a good pass (R# / R+).</dd>
+    <dt>Med</dt><dd>FBSO swing off a medium pass (R!).</dd>
+    <dt>OoS</dt><dd>FBSO swing off a bad pass (R−).</dd>
+    <dt>Tr</dt><dd>Transition: any attack after the first ball.</dd>
+    <dt>Combo</dt><dd>The attack code from the scout file, shown by name: X5 Go · X6 Red · V5 HighZ4 · X1 Tight Quick · V6 HighZ2 · X7 Gap · CF Slide · PP Setter Dump · VP Pipe · XP Bic · XM Push · X2 A · X3 2 Ball · X8 D Ball · X9 Rip · CB B Slide · V8 High D Ball · XS OppSlide.</dd>
+    <dt>D1 avg</dt><dd>National efficiency for that combo and phase, shown in grey.</dd>
+    <dt>Share</dt><dd>That combo's share of the team's swings in the phase.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-setting"><h3>Setting</h3><dl>
+    <dt>Set att</dt><dd>Set attempts by the player.</dd>
+    <dt>Assists</dt><dd>Sets followed by a kill.</dd>
+    <dt>Set err %</dt><dd>Share of set attempts graded as errors.</dd>
+    <dt>Eff / K % off setter</dt><dd>Attack efficiency and kill % on swings that came off this player's set.</dd>
+    <dt>0–1 blk</dt><dd>Share of attacks off the set that met no block, a single blocker or a seam (hole block).</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-players"><h3>Players</h3><dl>
+    <dt>Position</dt><dd>Inferred from touch mix, not a roster: S = mostly sets; L/DS = no attacking or blocking; MB = block-heavy with little reception; OPP/MB = attacks and blocks, no reception; Pin = everyone else.</dd>
+    <dt>Recs</dt><dd>Receptions.</dd>
+    <dt>Eff / K % off set</dt><dd>For liberos and DS: attacking results on swings off their sets.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-ratings"><h3>Team ratings</h3><dl>
+    <dt>Scale</dt><dd>40–99. Each metric is opponent-adjusted (team and opponent effects solved together, so schedule strength is credited), z-scored against D1 teams with 3+ matches, and placed on the scale: up to 80 it follows the normal curve (70 = D1 average), and above 80 it stretches so that 99 takes about 3 standard deviations above average. Only a truly elite team reaches the high 90s.</dd>
+    <dt>Attacking</dt><dd>FBSO swing eff, in-system eff, medium eff, out-of-system eff, transition eff.</dd>
+    <dt>Serving</dt><dd>xFBSO (S), KO %, ace %, serve error %.</dd>
+    <dt>Passing</dt><dd>xFBSO, good pass % (R# / R+), reception error %, pass rating — equally weighted.</dd>
+    <dt>Setting</dt><dd>0–1 blocker %, in-system eff off a set, medium-pass eff off a set, set error %.</dd>
+    <dt>Blocking</dt><dd>Stuff %, opponent FBSO eff allowed, INSABE, OOSABE, good block touch % (B# + B+ over all block attempts) — equally weighted.</dd>
+    <dt>Digging</dt><dd>Dig quality (xD K %), Create, opponent transition eff allowed.</dd>
+    <dt>Overall</dt><dd>Weighted blend of the six components; weights are refit each update as the regression of the power net rating on the components.</dd>
+    <dt>Pwr #</dt><dd>Power rank. Overall is a skills score and power is a points-won outcome; a gap means over- or under-performing the profile.</dd>
+    <dt>▲ ▼ (ratings)</dt><dd>Change from the previous week: every rating is recomputed from the matches through last Sunday, with the same Overall weights, and compared with today's.</dd>
+    <dt>Raw / n</dt><dd>On the Team page, grey is the unadjusted season value and n is the number of attempts behind it.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-power"><h3>Power rankings &amp; projections</h3><dl>
+    <dt>Net</dt><dd>Opponent-adjusted sideout rating minus opponent-adjusted sideout allowed, in points per 100 receptions, with home court removed and small samples regressed to the D1 mean.</dd>
+    <dt>SO rating / SO allowed</dt><dd>The two halves of Net.</dd>
+    <dt>SOS</dt><dd>Average Net of opponents faced.</dd>
+    <dt>Form</dt><dd>Average of the last 10 matches' net sideout relative to what the ratings expected. Positive = playing above rating lately.</dd>
+    <dt>Last 10</dt><dd>Record in the last 10 matches (NCAA committee window).</dd>
+    <dt>Win prob</dt><dd>From the same ratings: point-win rates receiving and serving → rally-scoring sets (25, win by 2; set 5 to 15) → best of five.</dd>
+    <dt>▲ ▼</dt><dd>On the RPI page, the change in rank since the team's previous match. Elsewhere, movement since the previous data update.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-trends"><h3>Trends</h3><dl>
+    <dt>Weekly rank</dt><dd>Power and RPI (with bonuses) recomputed from only the results through each Sunday.</dd>
+    <dt>Movers</dt><dd>Change in rank from the chosen week to the latest update. ▲ = moved up.</dd>
+    <dt>Stat trends</dt><dd>A team's box-score rates for the matches played each week (Monday–Sunday), its season-to-date line, and the D1 average. Rates are pooled (total kills ÷ total attempts, etc.), not averages of match percentages.</dd>
+    <dt>Hot / cold</dt><dd>The chosen stat over the recent window vs every match before it. Opponent efficiency and error rates are flipped so "heating up" always means better.</dd>
+  </dl></div>
+  <div class="card gl-sec" id="gl-rpi"><h3>RPI</h3><dl>
+    <dt>RPI</dt><dd>0.25 × win % + 0.50 × opponents' win % + 0.25 × opponents' opponents' win %. D1 games only; opponents' records exclude games against the team.</dd>
+    <dt>RPI (adj)</dt><dd>NCAA volleyball bonuses/penalties: wins vs 1–25 +2 positions, 26–50 +1; losses vs 288–312 −1, vs 313+ or non-D1 −2; nonconference schedule ≥50% top-75 +2, ≥50% 263+ −2.</dd>
+    <dt>RPI futures</dt><dd>1,000 simulated seasons of the remaining schedule using the win model, with RPI recomputed each time.</dd>
+    <dt>Highlights</dt><dd>Gold = win vs current top 25; blue = win vs 26–50.</dd>
+    <dt>RPI by conference</dt><dd>Average RPI (with bonuses) of a conference's teams, how many sit in the top 25/50/100, and its nonconference D1 record, split by the opponent's current RPI rank. Bad losses = nonconference losses to teams ranked 151+.</dd>
+  </dl></div>
+  </div>
+</section>
+
+<!-- ================= DATA QUALITY ================= -->
+<section class="panel" id="p-dq" hidden>
+  <div class="kpis" id="dq-kpis"></div>
+  <div class="grid g2">
+    <div class="card"><h3>Matches by date</h3><div class="chart"><canvas id="c-dq-date"></canvas></div></div>
+    <div class="card"><h3>Matches per team <small>how many files each team appears in</small></h3><div class="chart"><canvas id="c-dq-hist"></canvas></div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Set score anomalies <small>final score below target, margin under 2, or extended set not won by 2</small></h3><div class="tbl-wrap"><table id="t-dq-sets"></table></div></div>
+    <div class="card"><h3>Match anomalies <small>fewer than 3 sets, more than 5, or no team reached 3</small></h3><div class="tbl-wrap"><table id="t-dq-matches"></table></div>
+      <h3 style="margin-top:18px">Duplicate matches <small>same date, same pair</small></h3><div id="dq-dup" class="note"></div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Low-coverage teams <small>2 or fewer matches — likely non-D1 opponents or missing files</small></h3><div class="tbl-wrap"><table id="t-dq-low"></table></div></div>
+    <div class="card"><h3>Jersey number with multiple names <small>same team + number, different player_name</small></h3><div class="tbl-wrap"><table id="t-dq-names"></table></div></div>
+  </div>
+  <div class="grid g2">
+    <div class="card"><h3>Skill × evaluation code counts</h3><div class="tbl-wrap"><table id="t-dq-eval"></table></div></div>
+    <div class="card"><h3>Row-level issues</h3><div id="dq-rows" style="margin-top:10px"></div></div>
+  </div>
+</section>
+
+<div class="foot"><span id="foot-src"></span><span>Att eff = (K − E − blocked) / attempts. SO% = points won receiving serve. PS% = points won serving.</span></div>
+</main><div id="site-loading"><div>Loading the numbers…</div></div><script>(async () => {
+  const SLUG = {"nat":"national","cf":"conference","am":"team","cmp":"compare","tr":"trends","grp":"top-50","rpi":"rpi","pwr":"power","ncaa":"bracketology","sc":"scores","gl":"glossary"}; const TAB = Object.fromEntries(Object.entries(SLUG).map(([k, v]) => [v, k]));
+  const pm = location.pathname.match(/\/stats\/([^/]+)\/?$/); const P = pm ? "../" : "";   // tab pages live one folder down
+  const idx = await fetch(P + "data/index.json").then(r => r.json()); const q = new URLSearchParams(location.search);
+  const cur = idx.seasons.includes(q.get("season")) ? q.get("season") : idx.current;
+  const [d, logos, names, ncaa, ...slims] = await Promise.all([fetch(`${P}data/${cur}.json`).then(r => r.json()), fetch(P + "data/logos.json").then(r => r.json()), fetch(P + "data/names.json").then(r => r.json()).catch(() => ({})), fetch(`${P}data/${cur}_ncaa.json`).then(r => r.ok ? r.json() : null).catch(() => null), ...idx.seasons.filter(s => s !== cur).map(s => fetch(`${P}data/${s}_slim.json`).then(r => r.json()).catch(() => null))]);
+  window.__PUBLIC__ = true;   // neutral site: no home team, no highlighting
+  window.__SCORES_API__ = idx.scores_api || "";
+  if (q.get("team") && d.detail && d.detail[q.get("team")]) { try { localStorage.setItem("m26team", q.get("team")); } catch (e) {} }
+  window.__DATA__ = d; window.__NCAA__ = ncaa; window.__LOGOS__ = logos; window.__NAMES__ = names; window.__OTHERS__ = Object.fromEntries(idx.seasons.filter(s => s !== cur).map((s, i) => [s, slims[i]]).filter(x => x[1]));
+  window.__SEASONS__ = { current: cur, available: idx.seasons };
+  const s = document.createElement("script"); s.src = P + "../assets/app.js?v=7c8d680f38"; s.onload = () => { document.getElementById("site-loading").remove(); const t = (pm && TAB[pm[1]]) || q.get("tab") || (q.get("team") ? "am" : "nat"); const b = document.querySelector(`.tab[data-tab="${t}"]`) ; (b && !b.hidden ? b : document.querySelector(".tab[data-tab=nat]")).click(); window.__NAV_LIVE__ = true; }; document.body.appendChild(s);
+})().catch(e => { document.getElementById("site-loading").innerHTML = "<div>Could not load the data (" + e.message + ").</div>"; });</script></body></html>
